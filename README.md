@@ -1,2 +1,2 @@
-# PFE_GM5_observateur
-Observateur pour l'équation des ondes appliqué à l'imagerie médicale.
+# Projet de fin d'études : observateur pour les équations des ondes appliqué à l'imagerie médicale
+
