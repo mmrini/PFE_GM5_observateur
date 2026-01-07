@@ -1,3 +1,6 @@
+"""
+Mesure de la vitesse dans D_obs.
+"""
 import numpy as np
 
 def compute_velocity(sol, dt):

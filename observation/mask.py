@@ -1,3 +1,6 @@
+"""
+Création du masque d'observation.
+"""
 import numpy as np
 
 def create_observation_mask(X, Y, Lx, Ly, center_frac=0.2):

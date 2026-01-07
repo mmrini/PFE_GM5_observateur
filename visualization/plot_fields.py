@@ -48,9 +48,9 @@ def plot_results(x, y, X, Y, u0, sol, used_dt, Lx, Ly, filename="onde2D_resultat
 
     return path
 
-def plot_field(X, Y, field, title, cmap='RdBu_r', save=False, filename_prefix=None):
+def plot_field(X, Y, field, title, cmap='RdBu_r', save=True, filename_prefix=None):
     """
-    Affiche et (optionnellement) sauvegarde un champ scalaire 2D.
+    Affiche et sauvegarde (optionnellement) un champ scalaire 2D.
     """
     fig, ax = plt.subplots(figsize=(6,5))
     pcm = ax.pcolormesh(X, Y, field, shading='auto', cmap=cmap)

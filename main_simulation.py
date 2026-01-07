@@ -1,8 +1,13 @@
 import numpy as np
+import matplotlib.pyplot as plt
+
 from config import Lx, Ly, nx, ny, T, nt, c0
-from direct_solver.wave_solver import solve_wave_2d
+from direct_solver.wave2D_direct_solver import solve_wave_2d
+from direct_solver.direct_observer import solve_observer_wave_2d, compute_error_energy
 from observation.mask import create_observation_mask
 from observation.measurement import compute_velocity, extract_observed_velocity
+from visualization.save_utils import ensure_data_folder, save_figure
+
 from visualization.plot_fields import (
     plot_results,
     plot_field,
@@ -51,13 +56,13 @@ plot_results(x, y, X, Y, u0, sol, used_dt, Lx, Ly)
 # Animation GIF de la propagation
 # ======================================================
 print("\nCréation du GIF d'animation...")
-animate_wave(X, Y, sol, used_dt)
+#animate_wave(X, Y, sol, used_dt)
 
 # ======================================================
 # Domaine d’observation D_obs 
 # ======================================================
 mask_obs = create_observation_mask(X, Y, Lx, Ly)
-plot_mask(X, Y, mask_obs, save=True)
+#plot_mask(X, Y, mask_obs, save=True)
 
 # ======================================================
 # Calcul de la dérivée temporelle ∂t u
@@ -72,3 +77,35 @@ t_index = len(v_all)//2
 plot_velocity_field(X, Y, v_all[t_index], t_index * used_dt)
 
 print("\nSimulation complète. Résultats disponibles dans le dossier 'data/'.")
+
+# ======================================================
+# Observateur direct
+# ======================================================
+print("\nLancement de l'observateur direct...")
+
+# Conditions initiales volontairement erronées
+u0_hat = np.zeros_like(u0)
+v0_hat = np.zeros_like(u0)
+
+gamma = 0.2 # gain de rétroaction
+
+sol_hat = solve_observer_wave_2d(u0_hat, v0_hat, c0, dx, used_dt, nt, mask_obs, v_obs, gamma)
+
+plot_field(X, Y, sol[-1], title="Solution réelle")
+plot_field(X, Y, sol_hat[-1], title="Solution observée")
+
+# ======================================================
+# Calcul de l'énergie de l'erreur et visualisation
+# ======================================================
+print("\nCalcul de l'énergie de l'erreur...")
+E_error = compute_error_energy(sol, sol_hat, c0, dx, used_dt)[1:]
+
+plt.figure(figsize=(7,4))
+plt.plot(np.arange(len(E_error))*used_dt, E_error, 'b-', lw=2)
+plt.xlabel("Temps [s]")
+plt.ylabel("Énergie de l'erreur")
+plt.title("Décroissance de l'énergie de l'erreur de l'observateur")
+plt.grid(True)
+plt.show()
+
+plt.savefig("data/error_energy_decay.png", dpi=300)  

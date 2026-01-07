@@ -27,5 +27,5 @@ def animate_wave(X, Y, sol, dt, filename="onde2D.gif", fps=30, cmap='RdBu_r', vm
     ani.save(path, writer='pillow', fps=fps)
     print(f"Animation sauvegardée : {path}")
 
-    plt.show()  # Afficher le GIF
+    plt.show() 
     return path

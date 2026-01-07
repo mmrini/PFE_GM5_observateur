@@ -70,7 +70,7 @@ def create_observation_mask(X, Y, Lx, Ly, center_frac):
     x_max = (0.5 + center_frac/2) * Lx
     y_min = (0.5 - center_frac/2) * Ly
     y_max = (0.5 + center_frac/2) * Ly
-    mask_center = (X >= x_min) & (X <= x_max) & (Y >= y_min) & (Y <= y_max)
+    mask_center = (X >= x_min) & (X <= x_max) & (Y >= y_min) & (Y <= y_max) # carré central
     return ~mask_center  # négation booléenne
 
 Lx = 1.0
