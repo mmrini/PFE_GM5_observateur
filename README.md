@@ -1,11 +1,23 @@
 # Projet de fin d'études : observateur pour les équations des ondes appliqué à l'imagerie médicale
 
 *Réalisé par :* Malak Mrini
+
 *Sous la supervision de :* Dr. Antoine Tonnoir 
 
-**Objectifs :**
+## Description
 
-- OK | Implémentation de la résolution directe de l'équation d'onde par différences finies 
-- OK | Intégration de la mesure de la vitesse $\partial _t u$ dans une certaine zone d'observation $D_{obs}$
-- En cours | Implémentation de l'observateur direct 
-- Implémentation de l'observateur rétrograde
+Ce dépôt à pour but d'implémenter un solveur direct aux différences finies pour l'équation des ondes et des observateurs associés pour estimer/observer le champ (et sa vitesse) à partir de mesures partielles (dans une zone d'observation D_obs). 
+
+## Fonctionnalités principales
+
+- Solveur direct explicite de l'équation des ondes (schéma aux différences finies).
+- Opérateur de mesure (extraction de $\partial_t u$ sur une zone d'observation).
+- Observateur direct (injection de correction basée sur la mesure).
+- > TO DO : Implémentation de l'observateur rétrograde
+
+## Reproduction 
+
+Sur le termminal, taper : `python main_simulation.py`
+
+## Visualisation et sauvegarde
+Les sorties sont enregistrées dans `data/`.
