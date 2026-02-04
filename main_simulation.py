@@ -7,6 +7,7 @@ from direct_solver.direct_observer import solve_observer_wave_2d, compute_error_
 from observation.mask import create_observation_mask
 from observation.measurement import compute_velocity, extract_observed_velocity
 from visualization.save_utils import ensure_data_folder, save_figure
+from inverse_solver.bfn import run_bfn_algorithm
 
 from visualization.plot_fields import (
     plot_results,
@@ -56,13 +57,13 @@ plot_results(x, y, X, Y, u0, sol, used_dt, Lx, Ly)
 # Animation GIF de la propagation
 # ======================================================
 print("\nCréation du GIF d'animation...")
-#animate_wave(X, Y, sol, used_dt)
+animate_wave(X, Y, sol, used_dt)
 
 # ======================================================
 # Domaine d’observation D_obs 
 # ======================================================
 mask_obs = create_observation_mask(X, Y, Lx, Ly)
-#plot_mask(X, Y, mask_obs, save=True)
+plot_mask(X, Y, mask_obs, save=True)
 
 # ======================================================
 # Calcul de la dérivée temporelle ∂t u
@@ -109,3 +110,38 @@ plt.grid(True)
 plt.show()
 
 plt.savefig("data/error_energy_decay.png", dpi=300)  
+
+# ======================================================
+# Test de l'algorithme BFN
+# ======================================================
+print("\nLancement de l'algorithme BFN complet...")
+
+# On part de conditions initiales nulles (ou bruitées)
+u0_guess = np.zeros_like(u0)
+v0_guess = np.zeros_like(v0)
+
+# Nombre d'itérations BFN
+n_iter = 5
+gamma_bfn = 0.5  # Parfois on prend un gamma un peu plus fort
+
+u0_rec, v0_rec, conv_hist = run_bfn_algorithm(
+    u0_guess, v0_guess, c0, dx, used_dt, nt, 
+    mask_obs, v_obs, gamma_bfn, num_iterations=n_iter
+)
+
+# Visualisation de la reconstruction
+plot_field(X, Y, u0, title="Condition Initiale Réelle (u0)")
+plot_field(X, Y, u0_rec, title=f"u0 Reconstruit (BFN {n_iter} iters)")
+
+# Erreur de reconstruction
+err_rec = u0 - u0_rec
+plot_field(X, Y, err_rec, title="Erreur de reconstruction u0", cmap='seismic')
+
+plt.figure()
+plt.plot(conv_hist, 'o-')
+plt.title("Convergence des itérations BFN")
+plt.xlabel("Itération")
+plt.ylabel("Norme de la mise à jour (||u_{k+1} - u_k||)")
+plt.grid(True)
+plt.savefig("data/bfn_convergence.png")
+plt.show()
