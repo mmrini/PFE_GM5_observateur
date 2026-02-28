@@ -1,7 +1,7 @@
 import numpy as np
 from .wave2D_direct_solver import laplacian, initialize_wave_solution
 
-def solve_observer_wave_2d(u0_hat, v0_hat, c, dx, dt, nt, mask_obs, v_obs, gamma, enforce_dt_safety=True):
+def solve_direct_observer(u0_hat, v0_hat, c, dx, dt, nt, mask_obs, v_obs, gamma, enforce_dt_safety=True):
     """
     Observateur direct pour l'équation des ondes 2D :
 

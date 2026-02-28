@@ -1,8 +1,8 @@
 import numpy as np
-from direct_solver.direct_observer import solve_observer_wave_2d
-from inverse_solver.wave2D_inverse_solution import solve_backward_observer
+from direct_solver.direct_observer import solve_direct_observer
+from inverse_solver.wave2D_inverse_solver import solve_backward_observer
 
-def run_bfn_algorithm(u0_guess, v0_guess, c, dx, dt, nt, mask_obs, v_obs, gamma, num_iterations=10):
+def run_bfn_algorithm(u0_guess, v0_guess, u0_orig, c, dx, dt, nt, mask_obs, v_obs, gamma, num_iterations=10):
     """
     Algorithme BFN avec résolution explicite rétrograde en t.
     """
@@ -16,7 +16,7 @@ def run_bfn_algorithm(u0_guess, v0_guess, c, dx, dt, nt, mask_obs, v_obs, gamma,
     for k in range(num_iterations):
         # 1. Forward (Observateur Direct) -> de 0 à T
         # On utilise ta fonction existante
-        sol_fwd = solve_observer_wave_2d(
+        sol_fwd = solve_direct_observer(
             uk, vk, c, dx, dt, nt, 
             mask_obs, v_obs, gamma, 
             enforce_dt_safety=False
@@ -39,7 +39,7 @@ def run_bfn_algorithm(u0_guess, v0_guess, c, dx, dt, nt, mask_obs, v_obs, gamma,
         v_0_new = (sol_bwd[1] - sol_bwd[0]) / dt
         
         # Convergence monitoring
-        diff = np.linalg.norm(u_0_new - uk)
+        diff = np.linalg.norm(u_0_new - u0_orig) #(u_0_new - uk)
         history.append(diff)
         print(f"Iter {k+1}: update norm = {diff:.4e}")
         
@@ -47,4 +47,5 @@ def run_bfn_algorithm(u0_guess, v0_guess, c, dx, dt, nt, mask_obs, v_obs, gamma,
         uk = u_0_new
         vk = v_0_new
         
+        # TO DO : ajouter sur la vitesse
     return uk, vk, history

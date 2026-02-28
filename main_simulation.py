@@ -1,9 +1,9 @@
 import numpy as np
 import matplotlib.pyplot as plt
 
-from config import Lx, Ly, nx, ny, T, nt, c0
+from config import Lx, Ly, nx, ny, T, nt, c0, gamma_bfn, n_iter
 from direct_solver.wave2D_direct_solver import solve_wave_2d
-from direct_solver.direct_observer import solve_observer_wave_2d, compute_error_energy
+from direct_solver.direct_observer import solve_direct_observer, compute_error_energy
 from observation.mask import create_observation_mask
 from observation.measurement import compute_velocity, extract_observed_velocity
 from visualization.save_utils import ensure_data_folder, save_figure
@@ -57,12 +57,12 @@ plot_results(x, y, X, Y, u0, sol, used_dt, Lx, Ly)
 # Animation GIF de la propagation
 # ======================================================
 print("\nCréation du GIF d'animation...")
-animate_wave(X, Y, sol, used_dt)
+#animate_wave(X, Y, sol, used_dt)
 
 # ======================================================
 # Domaine d’observation D_obs 
 # ======================================================
-mask_obs = create_observation_mask(X, Y, Lx, Ly)
+mask_obs = create_observation_mask(X, Y, Lx, Ly, center_frac=0.8)
 plot_mask(X, Y, mask_obs, save=True)
 
 # ======================================================
@@ -88,10 +88,7 @@ print("\nLancement de l'observateur direct...")
 u0_hat = np.zeros_like(u0)
 v0_hat = np.zeros_like(u0)
 
-gamma = 0.2 # gain de rétroaction
-
-sol_hat = solve_observer_wave_2d(u0_hat, v0_hat, c0, dx, used_dt, nt, mask_obs, v_obs, gamma)
-
+sol_hat = solve_direct_observer(u0_hat, v0_hat, c0, dx, used_dt, nt, mask_obs, v_obs, gamma_bfn)
 plot_field(X, Y, sol[-1], title="Solution réelle")
 plot_field(X, Y, sol_hat[-1], title="Solution observée")
 
@@ -120,14 +117,11 @@ print("\nLancement de l'algorithme BFN complet...")
 u0_guess = np.zeros_like(u0)
 v0_guess = np.zeros_like(v0)
 
-# Nombre d'itérations BFN
-n_iter = 5
-gamma_bfn = 0.5  # Parfois on prend un gamma un peu plus fort
-
 u0_rec, v0_rec, conv_hist = run_bfn_algorithm(
-    u0_guess, v0_guess, c0, dx, used_dt, nt, 
+    u0_guess, v0_guess, sol_hat[0] , c0, dx, used_dt, nt, 
     mask_obs, v_obs, gamma_bfn, num_iterations=n_iter
-)
+) #u0 
+print(len(u0_rec))
 
 # Visualisation de la reconstruction
 plot_field(X, Y, u0, title="Condition Initiale Réelle (u0)")
@@ -145,3 +139,7 @@ plt.ylabel("Norme de la mise à jour (||u_{k+1} - u_k||)")
 plt.grid(True)
 plt.savefig("data/bfn_convergence.png")
 plt.show()
+
+# TO DO : ajouter un test avec les bonnes données initiales , observer que l'erreur est "nulle" (û=u)
+# TO DO : cas d'une zone d'observation qui ne respecte pas la CG 
+# TO DO : check si je divise bine par dt le terme source 
