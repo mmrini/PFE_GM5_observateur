@@ -1,54 +1,40 @@
 import numpy as np
-from .wave2D_direct_solver import laplacian, initialize_wave_solution
+from .wave2D_direct_solver import laplacian
 
-def solve_direct_observer(u0_hat, v0_hat, c, dx, dt, nt, mask_obs, v_obs, gamma, enforce_dt_safety=True):
-    """
-    Observateur direct pour l'équation des ondes 2D :
-
-        (1/c^2) u_tt - Δu + gamma * χ_Dobs (u_t - d) = 0
-
-    Calcule:
-    sol_hat : list of ndarray
-        Solution estimée û
-    """
-
+def solve_direct_observer(u0_hat, v0_hat, c, dx, dt, nt, mask_obs, v_obs, gamma):
     nx, ny = u0_hat.shape
-    sol_hat = []
-
-    cmax = np.max(c)
-    cfl_limit = 1.0 / np.sqrt(2.0)
-
-    if enforce_dt_safety and cmax * dt / dx > cfl_limit:
-        dt = cfl_limit * dx / cmax
-        print(f"[CFL] dt ajusté à {dt:.3e}")
+    sol_hat = [None] * (nt + 1)
     
-    # Initialisation 
-    sol_hat.append(u0_hat.copy())
-    u_nm1, u_n, u_np1 = initialize_wave_solution(u0_hat, v0_hat, c, dx, dt)
-    sol_hat.append(u_np1.copy())
+    # Initialisation u^0 et u^1 (Taylor standard)
+    u_nm1 = u0_hat.copy()
+    Lu0 = laplacian(u0_hat, dx)
+    u_n = u0_hat + dt * v0_hat + 0.5 * (dt**2) * (c**2) * Lu0 
+    
+    sol_hat[0] = u_nm1.copy()
+    sol_hat[1] = u_n.copy()
 
-    for n in range(1, nt-1):
+    # Pré-calcul du dénominateur et des coefficients
+    coeff_gamma = (gamma * (c**2) * dt) / 2.0
+    mask_obs = mask_obs.astype(bool)
+    denom = 1.0 + coeff_gamma * mask_obs
+    
+    for n in range(1, nt):
+        # Mesure d_n
+        d_n = np.zeros_like(u_n)
+        d_n[mask_obs] = v_obs[n] # Mesure au temps n
 
-        # vitesse estimée de l'observateur
-        v_hat_n = (u_np1 - u_n) / dt
+        Lu = laplacian(u_n, dx)
+        
+        term_past = (1.0 - coeff_gamma * mask_obs) * u_nm1
+        numerateur = 2*u_n - term_past + (dt**2) * (c**2) * (Lu + gamma * mask_obs * d_n)
+        
+        u_np1 = numerateur / denom
 
-        # données observées remises sur la grille
-        d_n = np.zeros_like(u_np1)
-        d_n[mask_obs] = v_obs[n-1]
+        # Dirichlet
+        u_np1[0,:] = u_np1[-1,:] = u_np1[:,0] = u_np1[:,-1] = 0
 
-        # terme de rétroaction
-        feedback = gamma * mask_obs * (v_hat_n - d_n)
-
-        # mise à jour onde + feedback
-        Lu = laplacian(u_np1, dx)
-        u_next = (2*u_np1 - u_n + dt**2 * (c**2) * Lu - dt * feedback)
-
-        # Dirichlet homogène
-        u_next[0,:] = u_next[-1,:] = 0
-        u_next[:,0] = u_next[:,-1] = 0
-
-        sol_hat.append(u_next.copy())
-        u_n, u_np1 = u_np1, u_next
+        sol_hat[n+1] = u_np1.copy()
+        u_nm1, u_n = u_n, u_np1
 
     return sol_hat
 
@@ -71,8 +57,8 @@ def compute_error_energy(sol_true, sol_hat, c, dx, dt):
 
     for n in range(1, nt):
         u_tilde = sol_hat[n] - sol_true[n]
-        # dérivée temporelle centrée
         if n < nt-1:
+            #u_tilde = sol_hat[n+1] - sol_true[n+1] 
             du_dt = (sol_hat[n+1] - sol_hat[n-1] - (sol_true[n+1] - sol_true[n-1])) / (2*dt)
         else:
             du_dt = (u_tilde - (sol_hat[n-1] - sol_true[n-1])) / dt  # dernier pas

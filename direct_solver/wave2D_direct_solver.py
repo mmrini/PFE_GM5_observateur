@@ -26,18 +26,12 @@ def initialize_wave_solution(u0, v0, c, dx, dt):
 
     return u_nm1, u_n, u_np1
 
-def solve_wave_2d(u0, v0, c, dx, dt, nt, enforce_dt_safety=True):
+def solve_wave_2d(u0, v0, c, dx, dt, nt):
     """
     Solveur 2D explicite pour l'équation des ondes :
         u_tt = c^2 * Δu, avec conditions de Dirichlet homogènes.
     """
     nx, ny = u0.shape
-    cmax = np.max(c)
-    cfl_limit = 1.0 / np.sqrt(2.0)
-
-    if enforce_dt_safety and cmax * dt / dx > cfl_limit:
-        dt = cfl_limit * dx / cmax
-        print(f"[CFL] dt ajusté à {dt:.3e}")
 
     # Initialisation 
     sol = [u0.copy()]
