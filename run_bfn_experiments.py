@@ -195,11 +195,11 @@ def parse_list(arg, cast=float):
 
 def main():
     parser = argparse.ArgumentParser(description='Run automated BFN experiments.')
-    parser.add_argument('--masks', type=str, default='full', help='Comma-separated mask types (full, hole_center, borders, left_wall, corners)')
+    parser.add_argument('--masks', type=str, default='full', help='Comma-separated mask types')
     parser.add_argument('--ratios', type=str, default='0.1', help='Comma-separated ratios used by masks (float)')
     parser.add_argument('--radius', type=str, default='0.1', help='Comma-separated radiuses used by circular masks (float)')
     parser.add_argument('--gammas', type=str, default='1.0', help='Comma-separated gamma values')
-    parser.add_argument('--n_iter', type=int, default=1, help='Number of times to repeat each experiment (for stability)')
+    parser.add_argument('--n_iter', type=int, default=1, help='Number of times to repeat each experiment')
     parser.add_argument('--bfn_iters', type=int, default=10, help='Number of BFN iterations')
     parser.add_argument('--out', type=str, default=None, help='Directory to save experiment data (default: data/experiments)')
     parser.add_argument('--verbose', action='store_true')
